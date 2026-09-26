@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ImageTTS: Repurposing Pretrained Image Diffusion Transformers for Speech Synthesis.">
+  <title>ImageTTS · ICLR 2027 anonymous submission</title>
+  <style>
+    :root {
+      --paper: #fbfbfa;
+      --ink: #202529;
+      --muted: #687178;
+      --faint: #f1f3f3;
+      --line: #d9dfe1;
+      --line-strong: #b9c2c5;
+      --accent: #607d84;
+      --max: 1160px;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; }
+    .page { width: min(calc(100% - 40px), var(--max)); margin: 0 auto; }
+    .site-header { border-bottom: 1px solid var(--line); background: rgba(251, 251, 250, .96); }
+    .nav { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+    .brand { color: var(--ink); font-size: .91rem; font-weight: 700; text-decoration: none; }
+    .nav-links { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 18px; color: var(--muted); font-size: .77rem; }
+    .nav-links a { text-decoration: none; }
+    .nav-links a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+
+    .hero { padding: 92px 0 72px; text-align: center; }
+    .hero h1 { max-width: 1050px; margin: 0 auto; font-size: clamp(1.85rem, 4vw, 3.45rem); font-weight: 700; letter-spacing: -.03em; line-height: 1.1; text-wrap: balance; }
+    .submission { margin: 18px 0 0; color: var(--muted); font-size: .83rem; letter-spacing: .08em; text-transform: uppercase; }
+    .hero-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+    .button { display: inline-flex; align-items: center; min-height: 38px; border: 1px solid var(--ink); border-radius: 5px; padding: 0 15px; background: var(--ink); color: #fff; font-size: .78rem; font-weight: 700; text-decoration: none; }
+    .button.secondary { background: transparent; color: var(--ink); }
+    .button:hover { opacity: .78; }
+
+    .section { border-top: 1px solid var(--line); padding: 68px 0; }
+    .section-header { margin-bottom: 28px; }
+    .section-kicker { margin: 0 0 7px; color: var(--accent); font-size: .7rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    h2 { margin: 0; font-size: clamp(1.8rem, 3vw, 2.65rem); font-weight: 700; letter-spacing: -.04em; line-height: 1.1; }
+    .section-intro { max-width: 710px; margin: 12px 0 0; color: var(--muted); font-size: .94rem; }
+    .abstract-grid { display: grid; grid-template-columns: .72fr 1.28fr; gap: 54px; align-items: start; }
+    .abstract-label { color: var(--muted); font-size: .79rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .abstract-copy { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 1.08rem; line-height: 1.72; }
+    .figure { margin-top: 46px; border: 1px solid var(--line); border-radius: var(--radius); background: #f5f7f7; padding: 28px; }
+    .figure-title { margin: 0 0 24px; font-size: .95rem; font-weight: 700; }
+    .architecture { display: grid; grid-template-columns: repeat(5, minmax(130px, 1fr)); gap: 26px; align-items: center; overflow-x: auto; padding: 6px 0 12px; }
+    .architecture-node { position: relative; min-height: 88px; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid var(--line-strong); border-radius: 7px; padding: 13px; background: #fff; }
+    .architecture-node:not(:last-child)::after { position: absolute; top: 50%; right: -22px; color: var(--accent); content: "→"; font-size: 1.2rem; transform: translateY(-50%); }
+    .architecture-node small { color: var(--muted); font-size: .67rem; letter-spacing: .08em; text-transform: uppercase; }
+    .architecture-node strong { font-size: .84rem; line-height: 1.25; }
+    figcaption { margin-top: 16px; color: var(--muted); font-size: .75rem; }
+    .paper-figure { margin: 48px auto 0; border: 1px solid var(--line); border-radius: var(--radius); background: #f5f7f7; padding: 18px; }
+    .paper-figure canvas { display: block; width: 100%; height: auto; background: #fff; }
+    .figure-fallback { display: block; margin-top: 10px; color: var(--accent); font-size: .72rem; text-align: right; }
+    .paper-figure figcaption { max-width: 920px; margin: 14px auto 0; }
+
+    .demo-section { border-top: 1px solid var(--line); padding: 68px 0; }
+    .demo-section:first-of-type { margin-top: 0; }
+    .demo-header { display: flex; justify-content: space-between; align-items: end; gap: 26px; margin-bottom: 22px; }
+    .demo-header p { max-width: 520px; margin: 0; color: var(--muted); font-size: .86rem; }
+    .matrix-wrap { overflow-x: scroll; scrollbar-gutter: stable; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; padding-bottom: 8px; }
+    .matrix { width: 100%; min-width: 1500px; border-collapse: collapse; table-layout: fixed; }
+    .matrix th, .matrix td { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 13px 12px; vertical-align: top; text-align: left; }
+    .matrix tr:last-child td { border-bottom: 0; }
+    .matrix th:last-child, .matrix td:last-child { border-right: 0; }
+    .matrix th { color: var(--muted); background: var(--faint); font-size: .7rem; font-weight: 700; line-height: 1.25; }
+    .matrix td { min-width: 145px; }
+    .matrix .condition { width: 175px; background: #fafbfb; }
+    .instruction-table { min-width: 2050px; }
+    .instruction-table .condition { width: 430px; }
+    .instruction-table .condition-text b { display: block; margin-bottom: 5px; font-size: .75rem; }
+    .matrix .method { display: block; margin-bottom: 6px; font-size: .76rem; font-weight: 700; line-height: 1.25; }
+    .matrix .sub { display: block; min-height: 27px; color: var(--muted); font-size: .68rem; line-height: 1.3; }
+    .reconstruction-table .method, .reconstruction-table .sub { display: none; }
+    .matrix audio { display: block; width: 100%; height: 31px; margin-top: 8px; }
+    .condition-text { font-size: .78rem; line-height: 1.45; }
+    .condition-text strong { display: block; margin-bottom: 5px; font-size: .75rem; }
+    .condition-text + .condition-text { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 14px; }
+    .placeholder-cell { display: block; margin-top: 8px; color: var(--muted); font-size: .68rem; font-style: italic; }
+    .table-note { margin: 10px 0 0; color: var(--muted); font-size: .72rem; }
+
+    .footer { border-top: 1px solid var(--line); padding: 27px 0 42px; color: var(--muted); font-size: .75rem; }
+    .footer-row { display: flex; justify-content: space-between; gap: 20px; }
+    @media (max-width: 760px) {
+      .page { width: min(calc(100% - 28px), var(--max)); }
+      .nav { align-items: flex-start; flex-direction: column; justify-content: center; padding: 15px 0; }
+      .nav-links { justify-content: flex-start; gap: 10px 15px; }
+      .hero { padding: 64px 0 54px; }
+      .abstract-grid { grid-template-columns: 1fr; gap: 18px; }
+      .demo-header { display: block; }
+      .demo-header p { margin-top: 12px; }
+      .architecture { grid-template-columns: repeat(5, 145px); }
+      .footer-row { display: block; }
+      .footer-row span + span { display: block; margin-top: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="page nav" aria-label="Primary navigation">
+      <a class="brand" href="#top">ImageTTS</a>
+      <div class="nav-links">
+        <a href="#abstract">Abstract</a>
+        <a href="#architecture">Architecture</a>
+        <a href="#reconstruction">Reconstruction samples</a>
+        <a href="#zero-shot">Zero-shot TTS</a>
+        <a href="#instruction">Instruction-guided TTS</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="page hero">
+      <h1>ImageTTS: Repurposing Pretrained Image Diffusion Transformers for Speech Synthesis</h1>
+      <p class="submission">Anonymous submission to ICLR 2027</p>
+      <div class="hero-actions">
+        <a class="button" href="#abstract">Read abstract</a>
+        <a class="button secondary" href="#reconstruction">Explore results</a>
+      </div>
+    </section>
+
+    <section class="section" id="abstract">
+      <div class="page">
+        <div class="abstract-grid">
+          <div>
+            <p class="section-kicker">01 · Paper</p>
+            <h2>Abstract</h2>
+          </div>
+          <p class="abstract-copy">Pretrained image-generation models have been successfully repurposed for various downstream visual tasks. Whether their learned representations and generative priors can transfer beyond vision to other modalities remains largely unresolved, particularly for speech synthesis, which requires linguistic fidelity and preservation of speaker identity from a short reference. We present ImageTTS, which repurposes FLUX.2 for speech synthesis by encoding pseudo-RGB log-mel spectrograms with its frozen image VAE and adapting only its pretrained Diffusion Transformer (DiT) using conditional latent flow matching. This formulation disentangles two forms of vision-to-speech transfer: representation transfer through the image VAE and generative-prior transfer through DiT initialization. The frozen image VAE largely preserves intelligibility and speaker identity with 0.99 STOI and 0.95 speaker similarity, while image-pretrained DiT initialization accelerates convergence and improves linguistic accuracy, reducing WER from 4.2% to 2.7% at 100k matched updates relative to random initialization. The same framework supports both zero-shot and instruction-guided TTS and, when scaled to 100K hours of speech data, achieves 1.12% WER on Seed-TTS test-en and a Style-ACC of 0.66 on CapSpeech, outperforming speech-native baselines trained on comparable data across both tasks. These results suggest that pretrained image models can transfer beyond architectural reuse, supplying useful latent representations and generative priors for intelligible and controllable speech synthesis.</p>
+        </div>
+        <figure class="paper-figure" id="architecture">
+          <canvas id="paper-figure-canvas" aria-label="ImageTTS Figure 1"></canvas>
+          <a class="figure-fallback" href="ImageTTS_Figure1.pdf">Open source PDF</a>
+          <figcaption>Figure 1: Overview of ImageTTS. The frozen image VAE supports high-fidelity speech reconstruction; image-pretrained initialization improves convergence; and the framework supports zero-shot and instruction-guided TTS.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="demo-section" id="reconstruction">
+      <div class="page">
+        <div class="demo-header">
+          <div><p class="section-kicker">03 · Audio samples</p><h2>Reconstruction samples</h2></div>
+          <p>Speech reconstruction with the frozen image VAE. Scroll horizontally to compare every representation and frequency setting.</p>
+        </div>
+        <div class="matrix-wrap">
+          <table class="matrix reconstruction-table">
+            <thead><tr><th class="condition">Reference</th><th>Vocoder only</th><th>Riffusion-o</th><th>Riffusion-n</th><th>FLUX.2<br>F = 96</th><th>FLUX.2<br>F = 128</th><th>FLUX.2<br>F = 256</th><th>FLUX.2<br>F = 512</th><th>FLUX.2<br>F = 1024</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="condition"><div class="condition-text"><strong>LibriTTS · Original waveform</strong>Reference audio<audio controls preload="none"><source src="assets/reconstruction/libritts/reference.wav" type="audio/wav">Your browser does not support audio.</audio></div></td>
+                <td><span class="method">Vocoder only</span><span class="sub">Mel + BigVGAN-v2</span><audio controls preload="none"><source src="assets/reconstruction/libritts/vocoder-only.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">Riffusion-o</span><span class="sub">Original preprocessing</span><audio controls preload="none"><source src="assets/reconstruction/libritts/riffusion-o.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">Riffusion-n</span><span class="sub">Matched preprocessing</span><audio controls preload="none"><source src="assets/reconstruction/libritts/riffusion-n.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FLUX.2 · F = 96</span><span class="sub">Image VAE</span><audio controls preload="none"><source src="assets/reconstruction/libritts/flux2-f96.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FLUX.2 · F = 128</span><span class="sub">Image VAE</span><audio controls preload="none"><source src="assets/reconstruction/libritts/flux2-f128.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FLUX.2 · F = 256</span><span class="sub">Image VAE</span><audio controls preload="none"><source src="assets/reconstruction/libritts/flux2-f256.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FLUX.2 · F = 512</span><span class="sub">Image VAE</span><audio controls preload="none"><source src="assets/reconstruction/libritts/flux2-f512.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FLUX.2 · F = 1024</span><span class="sub">Image VAE</span><audio controls preload="none"><source src="assets/reconstruction/libritts/flux2-f1024.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+              </tr>
+              <tr>
+                <td class="condition"><div class="condition-text"><strong>LibriSpeech · Original waveform</strong>Reference audio<audio controls preload="none"><source src="assets/reconstruction/librispeech/reference.flac" type="audio/flac">Your browser does not support audio.</audio></div></td>
+                <td><span class="method">Vocoder only</span><span class="sub">Mel + BigVGAN-v2</span><audio controls preload="none"><source src="assets/reconstruction/librispeech/vocoder-only.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">Riffusion-o</span><span class="sub">Original preprocessing</span><audio controls preload="none"><source src="assets/reconstruction/librispeech/riffusion-o.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">Riffusion-n</span><span class="sub">Matched preprocessing</span><audio controls preload="none"><source src="assets/reconstruction/librispeech/riffusion-n.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FLUX.2 · F = 96</span><span class="sub">Image VAE</span><audio controls preload="none"><source src="assets/reconstruction/librispeech/flux2-f96.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FLUX.2 · F = 128</span><span class="sub">Image VAE</span><audio controls preload="none"><source src="assets/reconstruction/librispeech/flux2-f128.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FLUX.2 · F = 256</span><span class="sub">Image VAE</span><audio controls preload="none"><source src="assets/reconstruction/librispeech/flux2-f256.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FLUX.2 · F = 512</span><span class="sub">Image VAE</span><audio controls preload="none"><source src="assets/reconstruction/librispeech/flux2-f512.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FLUX.2 · F = 1024</span><span class="sub">Image VAE</span><audio controls preload="none"><source src="assets/reconstruction/librispeech/flux2-f1024.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="table-note">The horizontal scrollbar keeps all reconstruction methods aligned. The first column is the original reference waveform; add more dataset rows by duplicating a table row.</p>
+      </div>
+    </section>
+
+    <section class="demo-section" id="zero-shot">
+      <div class="page">
+        <div class="demo-header">
+          <div><p class="section-kicker">04 · Audio samples</p><h2>Zero-shot TTS</h2></div>
+          <p>Each row uses the same transcription and reference speech for all methods. Five English and five Chinese examples are included for direct listening comparison.</p>
+        </div>
+        <div class="matrix-wrap">
+          <table class="matrix zero-shot-table">
+            <thead><tr><th class="condition">Conditions</th><th>Ground Truth</th><th>Qwen3-TTS</th><th>FireRedTTS3-Instruct</th><th>VoxCPM2</th><th>F5-TTS</th><th>MaskGCT</th><th>ImageTTS-base</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="condition"><div class="condition-text"><strong>EN · sample_01007</strong>I still say that this John Doe person is a myth.</div><div class="condition-text"><strong>Reference</strong>Speech prompt<audio controls preload="none"><source src="assets/zero-shot/en/sample_01007/reference.wav" type="audio/wav">Your browser does not support audio.</audio></div></td>
+                <td><span class="method">Ground Truth</span><span class="sub">Target recording</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_01007/ground-truth.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">Qwen3-TTS</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_01007/qwen3-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FireRedTTS3-Instruct</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_01007/fireredtts3-instruct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">VoxCPM2</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_01007/voxcpm2.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">F5-TTS</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_01007/f5-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">MaskGCT</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_01007/maskgct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">ImageTTS-base</span><span class="sub">Ours</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_01007/imagetts-base.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+              </tr>
+              <tr>
+                <td class="condition"><div class="condition-text"><strong>EN · sample_00580</strong>Secondly, there is a difference between a major tone and a minor tone.</div><div class="condition-text"><strong>Reference</strong>Speech prompt<audio controls preload="none"><source src="assets/zero-shot/en/sample_00580/reference.wav" type="audio/wav">Your browser does not support audio.</audio></div></td>
+                <td><span class="method">Ground Truth</span><span class="sub">Target recording</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00580/ground-truth.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">Qwen3-TTS</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00580/qwen3-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FireRedTTS3-Instruct</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00580/fireredtts3-instruct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">VoxCPM2</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00580/voxcpm2.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">F5-TTS</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00580/f5-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">MaskGCT</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00580/maskgct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">ImageTTS-base</span><span class="sub">Ours</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00580/imagetts-base.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+              </tr>
+              <tr>
+                <td class="condition"><div class="condition-text"><strong>EN · sample_00609</strong>Persecution of Samaritans was common in the following centuries.</div><div class="condition-text"><strong>Reference</strong>Speech prompt<audio controls preload="none"><source src="assets/zero-shot/en/sample_00609/reference.wav" type="audio/wav">Your browser does not support audio.</audio></div></td>
+                <td><span class="method">Ground Truth</span><span class="sub">Target recording</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00609/ground-truth.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">Qwen3-TTS</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00609/qwen3-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FireRedTTS3-Instruct</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00609/fireredtts3-instruct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">VoxCPM2</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00609/voxcpm2.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">F5-TTS</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00609/f5-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">MaskGCT</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00609/maskgct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">ImageTTS-base</span><span class="sub">Ours</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00609/imagetts-base.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+              </tr>
+              <tr>
+                <td class="condition"><div class="condition-text"><strong>EN · sample_00172</strong>Tao uses his song as weapon to bitterly criticize terrorists.</div><div class="condition-text"><strong>Reference</strong>Speech prompt<audio controls preload="none"><source src="assets/zero-shot/en/sample_00172/reference.wav" type="audio/wav">Your browser does not support audio.</audio></div></td>
+                <td><span class="method">Ground Truth</span><span class="sub">Target recording</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00172/ground-truth.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">Qwen3-TTS</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00172/qwen3-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FireRedTTS3-Instruct</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00172/fireredtts3-instruct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">VoxCPM2</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00172/voxcpm2.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">F5-TTS</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00172/f5-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">MaskGCT</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00172/maskgct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">ImageTTS-base</span><span class="sub">Ours</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_00172/imagetts-base.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+              </tr>
+              <tr>
+                <td class="condition"><div class="condition-text"><strong>EN · sample_01084</strong>She would never know the difference, because she didn't know how to read.</div><div class="condition-text"><strong>Reference</strong>Speech prompt<audio controls preload="none"><source src="assets/zero-shot/en/sample_01084/reference.wav" type="audio/wav">Your browser does not support audio.</audio></div></td>
+                <td><span class="method">Ground Truth</span><span class="sub">Target recording</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_01084/ground-truth.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">Qwen3-TTS</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_01084/qwen3-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FireRedTTS3-Instruct</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_01084/fireredtts3-instruct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">VoxCPM2</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_01084/voxcpm2.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">F5-TTS</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_01084/f5-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">MaskGCT</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_01084/maskgct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">ImageTTS-base</span><span class="sub">Ours</span><audio controls preload="none"><source src="assets/zero-shot/en/sample_01084/imagetts-base.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+              </tr>
+              <tr>
+                <td class="condition"><div class="condition-text"><strong>ZH · sample_01709</strong>外表攀附着超过两百种类别，深浅大小不一的热带攀缘植物。</div><div class="condition-text"><strong>Reference</strong>Speech prompt<audio controls preload="none"><source src="assets/zero-shot/zh/sample_01709/reference.wav" type="audio/wav">Your browser does not support audio.</audio></div></td>
+                <td><span class="method">Ground Truth</span><span class="sub">Target recording</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_01709/ground-truth.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">Qwen3-TTS</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_01709/qwen3-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FireRedTTS3-Instruct</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_01709/fireredtts3-instruct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">VoxCPM2</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_01709/voxcpm2.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">F5-TTS</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_01709/f5-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">MaskGCT</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_01709/maskgct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">ImageTTS-base</span><span class="sub">Ours</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_01709/imagetts-base.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+              </tr>
+              <tr>
+                <td class="condition"><div class="condition-text"><strong>ZH · sample_01998</strong>天快黑的时候，雨已经变小，看样子应该要停了。</div><div class="condition-text"><strong>Reference</strong>Speech prompt<audio controls preload="none"><source src="assets/zero-shot/zh/sample_01998/reference.wav" type="audio/wav">Your browser does not support audio.</audio></div></td>
+                <td><span class="method">Ground Truth</span><span class="sub">Target recording</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_01998/ground-truth.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">Qwen3-TTS</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_01998/qwen3-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FireRedTTS3-Instruct</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_01998/fireredtts3-instruct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">VoxCPM2</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_01998/voxcpm2.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">F5-TTS</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_01998/f5-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">MaskGCT</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_01998/maskgct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">ImageTTS-base</span><span class="sub">Ours</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_01998/imagetts-base.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+              </tr>
+              <tr>
+                <td class="condition"><div class="condition-text"><strong>ZH · sample_00627</strong>死者阿浩是一名负责设备维修的技术员。</div><div class="condition-text"><strong>Reference</strong>Speech prompt<audio controls preload="none"><source src="assets/zero-shot/zh/sample_00627/reference.wav" type="audio/wav">Your browser does not support audio.</audio></div></td>
+                <td><span class="method">Ground Truth</span><span class="sub">Target recording</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00627/ground-truth.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">Qwen3-TTS</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00627/qwen3-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FireRedTTS3-Instruct</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00627/fireredtts3-instruct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">VoxCPM2</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00627/voxcpm2.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">F5-TTS</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00627/f5-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">MaskGCT</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00627/maskgct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">ImageTTS-base</span><span class="sub">Ours</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00627/imagetts-base.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+              </tr>
+              <tr>
+                <td class="condition"><div class="condition-text"><strong>ZH · sample_00487</strong>他们把车停在黑车旁，开始通过喇叭驱赶黑车。</div><div class="condition-text"><strong>Reference</strong>Speech prompt<audio controls preload="none"><source src="assets/zero-shot/zh/sample_00487/reference.wav" type="audio/wav">Your browser does not support audio.</audio></div></td>
+                <td><span class="method">Ground Truth</span><span class="sub">Target recording</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00487/ground-truth.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">Qwen3-TTS</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00487/qwen3-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FireRedTTS3-Instruct</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00487/fireredtts3-instruct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">VoxCPM2</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00487/voxcpm2.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">F5-TTS</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00487/f5-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">MaskGCT</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00487/maskgct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">ImageTTS-base</span><span class="sub">Ours</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00487/imagetts-base.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+              </tr>
+              <tr>
+                <td class="condition"><div class="condition-text"><strong>ZH · sample_00635</strong>中国现代国际关系研究院副院长袁鹏指出。</div><div class="condition-text"><strong>Reference</strong>Speech prompt<audio controls preload="none"><source src="assets/zero-shot/zh/sample_00635/reference.wav" type="audio/wav">Your browser does not support audio.</audio></div></td>
+                <td><span class="method">Ground Truth</span><span class="sub">Target recording</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00635/ground-truth.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">Qwen3-TTS</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00635/qwen3-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">FireRedTTS3-Instruct</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00635/fireredtts3-instruct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">VoxCPM2</span><span class="sub">Zero-shot baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00635/voxcpm2.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">F5-TTS</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00635/f5-tts.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">MaskGCT</span><span class="sub">Comparable-data baseline</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00635/maskgct.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+                <td><span class="method">ImageTTS-base</span><span class="sub">Ours</span><audio controls preload="none"><source src="assets/zero-shot/zh/sample_00635/imagetts-base.wav" type="audio/wav">Your browser does not support audio.</audio></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="demo-section" id="instruction">
+      <div class="page">
+        <div class="demo-header">
+          <div><p class="section-kicker">05 · Audio samples</p><h2>Instruction-guided TTS</h2></div>
+        </div>
+        <div class="matrix-wrap">
+          <table class="matrix instruction-table">
+            <thead><tr><th class="condition">Conditions</th><th>PromptTTS</th><th>VoxInstruct</th><th>FireRedTTS3-Instruct</th><th>Qwen3-TTS-VD</th><th>VoxCPM2</th><th>CapTTS-AR</th><th>CapTTS-NAR</th><th>ImageTTS-Instruct</th></tr></thead>
+            <tbody id="instruction-samples"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer"><div class="page footer-row"><span>ImageTTS · Anonymous research preview</span><span>ICLR 2027</span></div></footer>
+  <script>
+    const instructionMethods = [
+      ["PromptTTS", "prompttts", "Instruction baseline"],
+      ["VoxInstruct", "voxinstruct", "Instruction baseline"],
+      ["FireRedTTS3-Instruct", "fireredtts3-instruct", "Instruction baseline"],
+      ["Qwen3-TTS-VD", "qwen3-tts-vd", "Voice design baseline"],
+      ["VoxCPM2", "voxcpm2", "Instruction baseline"],
+      ["CapTTS-AR", "captts-ar", "CapSpeech baseline"],
+      ["CapTTS-NAR", "captts-nar", "CapSpeech baseline"],
+      ["ImageTTS-Instruct", "imagetts-instruct", "Ours"],
+    ];
+    const instructionSamples = [
+      { id: "capspeech_pt_002619", score: "0.669193", wer: "0.0%", transcript: "My silence, at parting, might have been ascribed by them to the intimidating influence of invectives and threats.", instruction: "The voice of a middle-aged woman carries a somber, monotone quality, her words delivered with a steady, moderate pace. The low pitch of her voice lends an understated gravity to her speech, creating an atmosphere of quiet reflection." },
+      { id: "capspeech_pt_002077", score: "0.580884", wer: "0.0%", transcript: "He also won the drama desk award for outstanding set design.", instruction: "A teenager, characterized by her slight expressiveness and animation, delivers her speech at a moderate pace, her voice carrying a high-pitch that fills the room with a lively, engaging tone." },
+      { id: "capspeech_pt_001210", score: "0.580096", wer: "0.0%", transcript: "A man whose actual achievement was small but who, if he had not died so young, would probably have become one of the most famous of the earlier herbalists.", instruction: "This speaker, a young male, displays a slightly expressive and animated demeanor, subtly coloring his words with enthusiasm. His tone, while not overly dramatic, carries a slightly high-pitch that adds a touch of urgency to his moderate-speed delivery." },
+      { id: "capspeech_pt_000995", score: "0.578548", wer: "0.0%", transcript: "Stupendous works of nature and art which proclaim in no uncertain tones the triumph of perseverance, all the performances of human art.", instruction: "A middle-aged male, with a slightly animated and expressive demeanor, orates in a slightly slow pace. His voice carries a slightly high pitch, imbuing his words with a sense of emotion and urgency." },
+      { id: "capspeech_pt_001114", score: "0.577984", wer: "0.0%", transcript: "This was a method frequently employed throughout all the islands of the hawaiian group.It was believed that any face reflected in a pool or calabash of water was a spirit face.Many times had ghosts been discovered in this way.", instruction: "A young adult woman delivers her words in a moderate tempo, her slightly animated and slightly high-pitched voice subtly conveying her slight yet noticeable enthusiasm. Her tone is slightly expressive, adding a touch of emotion to her speech." },
+    ];
+    const instructionBody = document.getElementById("instruction-samples");
+    if (instructionBody) {
+      instructionBody.innerHTML = instructionSamples.map((sample) => {
+        const cells = instructionMethods.map(([label, slug, subtitle]) =>
+          `<td><span class="method">${label}</span><span class="sub">${subtitle}</span><audio controls preload="none"><source src="assets/instruct/${sample.id}/${slug}.wav" type="audio/wav">Your browser does not support audio.</audio></td>`
+        ).join("");
+        return `<tr><td class="condition"><div class="condition-text"><strong>Transcription</strong><span>${sample.transcript}</span></div><div class="condition-text"><strong>Instruction</strong><span>${sample.instruction}</span></div></td>${cells}</tr>`;
+      }).join("");
+    }
+  </script>
+  <script type="module">
+    import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs";
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs";
+
+    const canvas = document.getElementById("paper-figure-canvas");
+    if (canvas) {
+      try {
+        const pdf = await pdfjsLib.getDocument("ImageTTS_Figure1.pdf").promise;
+        const page = await pdf.getPage(1);
+        const baseViewport = page.getViewport({ scale: 1 });
+        const viewport = page.getViewport({ scale: 2 });
+        canvas.width = Math.ceil(viewport.width);
+        canvas.height = Math.ceil(viewport.height);
+        canvas.style.aspectRatio = `${baseViewport.width} / ${baseViewport.height}`;
+        await page.render({
+          canvasContext: canvas.getContext("2d"),
+          viewport,
+        }).promise;
+      } catch (error) {
+        console.warn("Figure 1 could not be rendered inline.", error);
+      }
+    }
+  </script>
+</body>
+</html>
